@@ -1,0 +1,140 @@
+\documentclass[10pt]{article}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{multicol}
+\setlength{\columnsep}{0.75cm}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{csquotes}
+\usepackage{todonotes}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\usepackage{hyperref}
+\usepackage[margin=1.75cm]{geometry}
+\usepackage[hpos=0.72\paperwidth,vpos=0.97\paperheight,angle=0,scale=0.8]{draftwatermark}
+\SetWatermarkText{Preprint}
+\SetWatermarkLightness{0.5}
+\SetWatermarkText{Preprint of preliminary work}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+
+\title{A piecewise linear approximation of $C(f)$ leads also to an approximation of the success probability $P(f)$ of \cite{DBLP:journals/corr/abs-2107-05322}}
+
+
+\author{Martin Berger}
+\begin{document} 
+\maketitle
+ 
+\begin{abstract}
+Solving reliable payment flows on the Lightning network with the methods proposed in \cite{DBLP:journals/corr/abs-2107-05322} involves maximizing the success probability $P(f)$ at best optimal. In order to solve the optimization problem it is reformulated to a minimization problem with convex but non-linear cost function $C(f)$. When for example optimal piecewise linear approximation (PWL) with $N$ linear segments \cite{Imamoto_optimalpiecewise} is applied to $C(f)$, it can be solved more efficiently with established methods that require linearity\footnote{See for example the implementations developed for \cite{DBLP:journals/corr/abs-2107-05322}: \url{https://github.com/renepickhardt/mpp-splitter/blob/master/Minimal Linearized min cost flow example for MPP.ipynb}}. However, the introduced approximation error $\epsilon$ can lead to sub-optimality in $C(f)$ and $P(f)$. We show, how such an approximation error for $C(f)$ reflects on the original objective $P(f)$ (in the worst case) and that (in theory) the approximation of $C(f)$ leads also to an approximation of $P(f)$ that can be improved by improving the PWL of $C(f)$.
+\end{abstract}
+
+%==========================================================================
+\section{Notation}
+
+Lets use the following notation:
+\begin{itemize}
+	\item $C(f) := \sum_{e\in E}-\log\left(P_e(X_e \geq f_e)\right) \ldots$ cost function of the min-cost flow problem of \cite{DBLP:journals/corr/abs-2107-05322}
+	\item $c_e(f_e):=-\log\left(P_e(X_e\geq f_e)\right) \ldots$ (convex) summand of the cost function for a given channel $e\in E$ of \cite{DBLP:journals/corr/abs-2107-05322}
+	\item $g_e(f_e) \ldots$ minimax solution that minimizes the error $\epsilon:=log\left(\delta\right), \delta \geq 1$ of the piecewise linear approximation of $c_e(f_e)$ with $N$ elements as proposed in \cite{Imamoto_optimalpiecewise}, i.e. $log\left(\delta\right)=\max_{0\leq P_e \leq 1}|g_e(f_e)-c_e(f_e)|$
+	\item $\tilde{C}(f) := \sum_{e\in E} g_e(f_e) \ldots$ approximation of $C(f)$ with lower and upper bounds on approximation error
+	\item $P(f):=\prod_{e\in E}P_e\left(X_{e} \geq f_e\right) \ldots$ success probability of entire flow of \cite{DBLP:journals/corr/abs-2107-05322}.
+	\item $\tilde{P}(f):=\exp(-\tilde{C}(f)) \ldots$ approximation of $P(f)$ with lower and upper bounds on approximation error
+\end{itemize}
+
+\section{Application of PWL to $c_e(f_e), \forall e \in E$}
+
+\subsection{Deduce bounds for $\tilde{C}(f)$}
+
+By the definition of the minimax solution, i.e. $log\left(\delta\right)=\max_{0\leq P_e\leq 1}|g_e(f_e)-c_e(f_e)|$, the following condition holds true:
+
+\[c_e(f_e) - \log(\delta) \leq g_e(f_e) \leq c_e(f_e) + \log(\delta)\]
+
+Applying these inequalities to $C(f)$ we can establish the following approximation bounds for $\tilde{C}(f)$:
+
+\[\sum_{e\in E}\left(-\log\left(P_e(X_e \geq f_e)\right) - \log(\delta)\right) \leq \tilde{C}(f) \leq \sum_{e\in E}\left(-\log\left(P_e(X_e \geq f_e)\right) + \log(\delta)\right)\]
+
+\subsection{Upper bound for $\tilde{P}(f)$}
+
+We start with the lower bound of $\tilde{C}(f)$:
+
+\[\sum_{e\in E}\left(-\log\left(P_e(X_e \geq f_e)\right) - \log(\delta)\right) \leq \tilde{C}(f) \]
+
+This can be reformulated to:
+
+\[\sum_{e\in E}\left(-\log\left(\delta P_e(X_e \geq f_e)\right) \right) \leq \tilde{C}(f) \]
+
+Multiplying the inequality with $(-1)$ leads to:
+
+\[\sum_{e\in E}\left(\log\left(\delta P_e(X_e \geq f_e)\right) \right) \geq -\tilde{C}(f) \]
+
+Multiplying the inequality with $\exp()$ leads to:
+
+\[\delta^{|E|}P(f)=\delta^{|E|}\prod_{e\in E}P_e\left(X_{e} \geq f_e\right) \geq \tilde{P}(f) \]
+
+\subsection{Lower bound for $\tilde{P}(f)$}
+
+We proceed with the upper bound of $\tilde{C}(f)$:
+
+\[ \tilde{C}(f) \leq \sum_{e\in E}\left(-\log\left(P_e(X_e \geq f_e)\right) + \log(\delta)\right) \]
+
+Multiplying the inequality with $(-1)$ leads to:
+
+\[ -\tilde{C}(f) \geq \sum_{e\in E}\left(\log\left(P_e(X_e \geq f_e)\right) - \log(\delta)\right) \]
+
+Multiplying the inequality with $\exp()$ leads to:
+
+\[ \tilde{P}(f) \geq \frac{\prod_{e\in E}P_e\left(X_{e} \geq f_e\right)}{\delta^{|E|}} = \frac{P(f)}{\delta^{|E|}} \]
+
+\subsection{Deduce bounds for $P(f)$}
+
+The previous bounds can be reformulated to:
+
+\[ \frac{\tilde{P}(f)}{\delta^{|E|}} \leq P(f) \leq \delta^{|E|} \tilde{P}(f) \]
+
+\section{Application of PWL to $C(f)$ directly}
+
+In \cite{DBLP:journals/corr/abs-2107-05322} it is shown, that $C(f)$ is convex on the entire domain. Hence, the same arguments of previous sections can be applied to $C(f)$ directly.
+For an PWL $\hat{C}(f)$ of $C(f)$ the following condition holds true:
+
+\[C(f) - \log(\delta) \leq \hat{C}(f) \leq C(f) + \log(\delta)\]
+
+Multiplying the inequality with $-\exp()$ leads to:
+
+\[\delta P(f) \geq \hat{P}(f) \geq \frac{P(f)}{\delta}\]
+
+This can be reformulated to:
+
+\[\frac{\hat{P}(f)}{\delta} \leq P(f) \leq \delta \hat{P}(f)\]
+
+\section{Conclusions}
+
+\begin{itemize}
+	\item For $\delta\rightarrow 1^+$, $\tilde{P}(f)$ approximates $P(f)$ (and vice versa).
+	\item For $\delta\rightarrow 1^+$, $\tilde{C}(f)$ approximates $C(f)$ (and vice versa).
+\end{itemize}
+
+\section{Future work}
+
+\begin{itemize}
+	\item Explore \cite{FRENZEN2010437} further to find \textbf{unknown} optimal or near-optimal $N$ for a desired approximation error $\epsilon$.
+	\item Explore further literature besides \cite{Imamoto_optimalpiecewise} on piecewise linear approximation.
+	\item Explore optimization literature on min-cost flow problems with uncertain capacities in more detail.
+	\item An optimal solution $f_C^*$ to $\tilde{C}(f)$ should also lead to a near-optimal solution of $P(f)$ with some deducible error. Our intuition says, this should be the case given the problem properties. However, it should be argued properly.
+	\item Is the approach with \textbf{optimal} piecewise linear approximation for a desired approximation quality for $P(f)$ even practical and allows decent run-times?
+	\item Finding a decent $N$ and a corresponding piecewise linear approximation with desired approximation error can be calculated offline / cached.
+\end{itemize}
+
+\section{Acknowledgements}
+
+We thank Rene Pickhardt for reviewing this preliminary work.
+
+
+\bibliography{approxPf}
+\bibliographystyle{plain}
+
+\end {document}
